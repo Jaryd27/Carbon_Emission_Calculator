@@ -172,6 +172,18 @@
     </div>
   `;
 
+   const fuelSelect = div.querySelector('.fuelType');
+  const gasNote = div.querySelector('.gas-note');
+
+  fuelSelect.addEventListener('change', () => {
+    if (fuelSelect.value.toLowerCase() === 'natural gas') {
+      gasNote.classList.remove('hidden');
+    } else {
+      gasNote.classList.add('hidden');
+    }
+  });
+
+
 
 
       div.querySelector('.remove-fuel-btn').onclick = () => div.remove();
