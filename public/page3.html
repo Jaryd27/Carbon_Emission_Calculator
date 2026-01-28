@@ -81,7 +81,15 @@
       width: 180px;              /* set desired size */
       height: auto;
     }
-    
+     .gas-note {
+  margin-top: 6px;
+  padding: 8px 10px;
+  background-color: #eef6ff;
+  border-left: 4px solid #007bff;
+  font-size: 0.9rem;
+  color: #333;
+  border-radius: 4px;
+}
   </style>
 </head>
 <body>
@@ -154,7 +162,18 @@
           <option value="L">Litres</option><option value="kWh">kWh</option>
         </select>
         <button type="button" class="remove-fuel-btn">X</button>
-      `;
+      
+
+       </div>
+
+    <div class="gas-note hidden">
+      If you want to enter natural gas consumption in m³, please use the <strong>Litres</strong> option for now.
+      This will be updated in a later version.
+    </div>
+  `;
+
+
+
       div.querySelector('.remove-fuel-btn').onclick = () => div.remove();
       return div;
     };
