@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NRG Questionnaire - Carbon Offsets & Tax Allowances</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .form-wrapper {
+      background-color: white;
+      padding: 2rem 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      max-width: 760px;
+      width: 100%;
+      margin-bottom: 40px;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #77dd77;
+      font-family: 'Lora', serif;
+      margin-bottom: 1rem;
+    }
+    h2 { color: #444; margin-top: 2rem; }
+    p { color: #333; line-height: 1.4; font-size: 14.5px; }
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    select, input[type="number"], input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-top: 5px;
+      box-sizing: border-box;
+      font-size: 1rem;
+    }
+
+    .renewable-block {
+      background: #f9f9f9;
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      position: relative;
+    }
+    .remove-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.3s;
+    }
+    .remove-btn:hover { background: #a71d2a; }
+
+    button {
+      margin-top: 1.2rem;
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .add-btn { background: #28a745; width: 100%; }
+    .add-btn:hover { background: #1e7e34; }
+    .submit-btn { background: #007bff; width: 100%; }
+    .submit-btn:hover { background: #0056b3; }
+
+    .hidden { display: none; }
+
+    .allowances-section {
+      background: #f2f8f2;
+      border: 1px solid #c8e6c9;
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #c8e6c9;
+      text-align: left;
+      padding: 8px;
+    }
+    th {
+      background-color: #e9f6ea;
+      font-weight: bold;
+    }
+    .percent-input {
+      width: 60px;
+      height: 28px;
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 3px;
+    }
+
+    /* ================================ */
+    /* INFO ICON + TOOLTIP STYLING     */
+    /* ================================ */
+    .info-icon {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      font-size: 12px;
+      line-height: 16px;
+      border-radius: 50%;
+      background: #77dd77;
+      color: white;
+      text-align: center;
+      margin-left: 6px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .info-icon .tooltip {
+      visibility: hidden;
+      opacity: 0;
+      width: 240px;
+      background: #333;
+      color: #fff;
+      text-align: left;
+      padding: 8px 10px;
+      border-radius: 6px;
+      position: absolute;
+      top: 22px;
+      left: -10px;
+      z-index: 10;
+      font-size: 12px;
+      transition: opacity 0.25s ease;
+    }
+
+    .info-icon:hover .tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .logo-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .logo {
+      width: 180px;
+      height: auto;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div class="form-wrapper">
+
+    <div class="logo-container">
+      <img src="/images/NRG-LOGO.png" class="logo">
+    </div>
+
+    <h1>Carbon Offsets & Tax Allowances</h1>
+
+    <form id="offsetsForm">
+
+      <!-- ===================== -->
+      <!-- CARBON OFFSETS -->
+      <!-- ===================== -->
+      <h2>Carbon Offsets</h2>
+      <p>This section collects information about renewable energy generation and any carbon credits purchased by your company.</p>
+
+      <label for="hasRenewable">Do you use renewable energy?</label>
+      <select id="hasRenewable" required>
+        <option value="">Select</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+
+      <div id="renewableSection" class="hidden">
+        <div id="renewableList"></div>
+        <button type="button" id="addRenewableBtn" class="add-btn">+ Add Renewable Source</button>
+      </div>
+
+      <label for="hasCredits">Do you buy and/or retire carbon credits?</label>
+      <select id="hasCredits" required>
+        <option value="">Select</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+
+      <div id="creditsSection" class="hidden">
+        <label for="creditsAmount">Enter total annual credits (tonnes CO₂e):</label>
+        <input type="number" id="creditsAmount" placeholder="e.g. 10" min="0" step="any" />
+      </div>
+
+      <!-- ========================= -->
+      <!-- CARBON TAX ALLOWANCES -->
+      <!-- ========================= -->
+      <h2>Carbon Tax Allowances</h2>
+      <p>All companies automatically receive the <strong>Basic Allowance (60%)</strong>.<br>Select any additional allowances that apply.</p>
+
+      <div class="allowances-section" id="allowanceSection">
+        <table>
+          <tr>
+            <th>Select</th>
+            <th>Allowance Type</th>
+            <th>Percentage (%)</th>
+          </tr>
+
+          <tr>
+            <td><input type="checkbox" id="allow_basic" checked disabled data-max="60"></td>
+            <td>
+              Basic Allowance (Automatically Awarded)
+              <span class="info-icon">i
+                <span class="tooltip">A standard 60% allowance automatically granted to all companies to reduce carbon tax impact.</span>
+              </span>
+            </td>
+            <td><input type="number" id="allow_basic_val" class="percent-input" value="60" readonly></td>
+          </tr>
+
+          <tr>
+            <td><input type="checkbox" id="allow_offset" data-max="10"></td>
+            <td>
+              Carbon Offsets Allowance (Max 10%)
+              <span class="info-icon">i
+                <span class="tooltip">Allows up to 10% reduction in taxable emissions when purchasing verified carbon credits.</span>
+              </span>
+            </td>
+            <td><input type="number" id="allow_offset_val" class="percent-input hidden" min="0" max="10"></td>
+          </tr>
+
+          <tr>
+            <td><input type="checkbox" id="allow_trade" data-max="10"></td>
+            <td>
+              Trade Exposure Allowance (Max 10%)
+              <span class="info-icon">i
+                <span class="tooltip">Supports industries exposed to international competition by offering up to 10% additional allowance.</span>
+              </span>
+            </td>
+            <td><input type="number" id="allow_trade_val" class="percent-input hidden" min="0" max="10"></td>
+          </tr>
+
+          <tr>
+            <td><input type="checkbox" id="allow_perf" data-max="5"></td>
+            <td>
+              Performance Allowance (Max 5%)
+              <span class="info-icon">i
+                <span class="tooltip">Reward for operating with emissions intensity better than industry benchmark.</span>
+              </span>
+            </td>
+            <td><input type="number" id="allow_perf_val" class="percent-input hidden" min="0" max="5"></td>
+          </tr>
+
+          <tr>
+            <td><input type="checkbox" id="allow_budget" data-max="5"></td>
+            <td>
+              Carbon Budget Allowance (Max 5%)
+              <span class="info-icon">i
+                <span class="tooltip">Available if your company participates in the national carbon budget system.</span>
+              </span>
+            </td>
+            <td><input type="number" id="allow_budget_val" class="percent-input hidden" min="0" max="5"></td>
+          </tr>
+
+        </table>
+      </div>
+
+      <div style="margin-top: 15px; font-size: 14px; color: #333;">
+        <p>
+          For more information on carbon tax allowances, follow this link:
+          <a href="https://www.treasury.gov.za/public%20comments/TaxationOfAlcoholicBeverages/Phase%20two%20of%20the%20carbon%20tax.pdf"
+             target="_blank" rel="noopener noreferrer"
+             style="color:#007bff; text-decoration:underline;">
+            Carbon Tax Phase 2 – National Treasury Document
+          </a>
+        </p>
+      </div>
+
+      <button type="submit" class="submit-btn">Continue</button>
+
+    </form>
+
+  </div>
+
+  <!-- ========================= -->
+  <!-- JAVASCRIPT LOGIC BELOW   -->
+  <!-- ========================= -->
+
+  <script>
+
+    const hasRenewable = document.getElementById('hasRenewable');
+    const renewableSection = document.getElementById('renewableSection');
+    const renewableList = document.getElementById('renewableList');
+    const addRenewableBtn = document.getElementById('addRenewableBtn');
+    const hasCredits = document.getElementById('hasCredits');
+    const creditsSection = document.getElementById('creditsSection');
+
+    /* ------------------------------- */
+    /* CREATE RENEWABLE ENTRY BLOCK    */
+    /* ------------------------------- */
+    function createRenewableEntry() {
+      const div = document.createElement('div');
+      div.className = 'renewable-block';
+
+      div.innerHTML = `
+        <button type="button" class="remove-btn">✖</button>
+
+        <label>Renewable Source:</label>
+        <select class="type" required>
+          <option value="">Select</option>
+          <option value="Solar">Solar PV</option>
+          <option value="Wind">Wind</option>
+          <option value="Hydro">Hydro</option>
+          <option value="Other">Other (specify)</option>
+        </select>
+
+        <input type="text" class="otherInput hidden" placeholder="Enter type" />
+
+        <label>Annual Generation:</label>
+        <input type="number" class="amount" placeholder="Enter amount" min="0" step="any" required />
+
+        <label>Unit:</label>
+        <select class="unit" required>
+          <option value="kWh">kWh</option>
+          <option value="MWh">MWh</option>
+          <option value="GWh">GWh</option>
+        </select>
+      `;
+
+      const typeSelect = div.querySelector('.type');
+      const otherInput = div.querySelector('.otherInput');
+
+      typeSelect.addEventListener('change', () => {
+        otherInput.classList.toggle('hidden', typeSelect.value !== 'Other');
+      });
+
+      div.querySelector('.remove-btn').addEventListener('click', () => div.remove());
+      return div;
+    }
+
+    hasRenewable.addEventListener('change', () => {
+      renewableSection.classList.toggle('hidden', hasRenewable.value !== 'yes');
+      if (hasRenewable.value === 'yes') {
+        renewableList.innerHTML = '';
+        renewableList.appendChild(createRenewableEntry());
+      }
+    });
+
+    addRenewableBtn.addEventListener('click', () => {
+      if (renewableList.children.length >= 3)
+        return alert("You can only add up to 3 renewable sources.");
+      renewableList.appendChild(createRenewableEntry());
+    });
+
+    hasCredits.addEventListener('change', () => {
+      creditsSection.classList.toggle('hidden', hasCredits.value !== 'yes');
+      if (hasCredits.value !== 'yes')
+        document.getElementById('creditsAmount').value = "";
+    });
+
+    /* ------------------------------- */
+    /* ALLOWANCE CHECKBOXES            */
+    /* ------------------------------- */
+    document.querySelectorAll('#allowanceSection input[type="checkbox"]').forEach(box => {
+      box.addEventListener('change', () => {
+        const input = document.getElementById(box.id + '_val');
+        if (input)
+          input.classList.toggle('hidden', !box.checked);
+      });
+    });
+
+    /* ------------------------------- */
+    /* SUBMIT FORM                     */
+    /* ------------------------------- */
+    document.getElementById('offsetsForm').addEventListener('submit', (e) => {
+
+      e.preventDefault();
+
+      const allowances = [];
+      document.querySelectorAll('#allowanceSection input[type="checkbox"]').forEach(box => {
+        const id = box.id.replace("allow_", "");
+        const input = document.getElementById(`allow_${id}_val`);
+        const label = box.closest('tr').children[1].innerText.trim();
+
+        if (box.checked) {
+          const value = parseFloat(input?.value) || parseFloat(box.dataset.max) || 0;
+          allowances.push({ name: label, percent: value });
+        }
+      });
+
+      sessionStorage.setItem("allowances", JSON.stringify(allowances));
+
+      // Calculate renewable offsets
+      let totalOffsets = 0;
+      const renewables = [];
+
+      if (hasRenewable.value === 'yes') {
+        renewableList.querySelectorAll('.renewable-block').forEach(block => {
+
+          let type = block.querySelector('.type').value;
+          const otherValue = block.querySelector('.otherInput').value;
+          const amount = parseFloat(block.querySelector('.amount').value);
+          const unit = block.querySelector('.unit').value;
+
+          if (type === "Other") type = otherValue.trim();
+          if (!type || isNaN(amount) || amount <= 0) return;
+
+          let conversion = 0.000987;
+          if (unit === 'MWh') conversion = 0.987;
+          if (unit === 'GWh') conversion = 987;
+
+          const tCO2_of = amount * conversion;
+          totalOffsets += tCO2_of;
+
+          renewables.push({ type, amount, unit, tCO2_of });
+        });
+      }
+
+      const renewableBreakdown = renewables.map(r => ({
+        name: r.type,
+        value: r.tCO2_of
+      }));
+      sessionStorage.setItem('renewableBreakdown', JSON.stringify(renewableBreakdown));
+
+      // Carbon credits
+      const credits =
+        hasCredits.value === "yes"
+          ? parseFloat(document.getElementById("creditsAmount").value) || 0
+          : 0;
+
+      sessionStorage.setItem("CO2_credit", credits.toFixed(4));
+
+      // Totals
+      const electricityCO2 = parseFloat(sessionStorage.getItem("Electricity_tCO2")) || 0;
+
+      const Tot_tCO2 =
+        electricityCO2 +
+        [1, 2, 3, 4].reduce(
+          (t, i) => t + (parseFloat(sessionStorage.getItem(`Fuel${i}_CO2`)) || 0),
+          0
+        );
+
+      const Tot_tCH4 = [1, 2, 3, 4].reduce(
+        (t, i) => t + (parseFloat(sessionStorage.getItem(`Fuel${i}_CH4`)) || 0),
+        0
+      );
+
+      const Tot_tN2O = [1, 2, 3, 4].reduce(
+        (t, i) => t + (parseFloat(sessionStorage.getItem(`Fuel${i}_N2O`)) || 0),
+        0
+      );
+
+      const Tot_tCO2_Eq = Tot_tCO2 + Tot_tCH4 * 27.2 + Tot_tN2O * 273;
+
+      const Tot_tCO2_Of = totalOffsets + credits;
+      const Net_tCO2_eq = Tot_tCO2_Eq - Tot_tCO2_Of;
+
+      sessionStorage.setItem("Tot_tCO2", Tot_tCO2.toFixed(4));
+      sessionStorage.setItem("Tot_tCH4", Tot_tCH4.toFixed(4));
+      sessionStorage.setItem("Tot_tN2O", Tot_tN2O.toFixed(4));
+      sessionStorage.setItem("Tot_tCO2_Eq", Tot_tCO2_Eq.toFixed(4));
+      sessionStorage.setItem("Tot_tCO2_Of", Tot_tCO2_Of.toFixed(4));
+      sessionStorage.setItem("Net_tCO2_eq", Net_tCO2_eq.toFixed(4));
+
+      window.location.href = "/page5.html";
+    });
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NRG Questionnaire - Energy & Fuel Usage</title>
+  <link rel="stylesheet" href="/styles/style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .form-wrapper {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      max-width: 650px;
+      width: 95%;
+    }
+    h1 {
+      text-align: center;
+      color: #77dd77;
+      font-family: 'Lora', serif;
+      margin-bottom: 1.5rem;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 1rem;
+      display: block;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    .fuel-entry {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+    }
+    .remove-fuel-btn {
+      background-color: #dc3545;
+      border: none;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .remove-fuel-btn:hover { background-color: #b0212a; }
+    button {
+      margin-top: 1.2rem;
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      background-color: #007bff;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:hover { background-color: #0056b3; }
+    .hidden { display: none; }
+
+    .logo-container {
+      display: flex;
+      justify-content: center;   /* centers horizontally */
+      align-items: center;
+      margin-bottom: 20px;       /* spacing before title */
+    }
+
+    .logo {
+      width: 180px;              /* set desired size */
+      height: auto;
+    }
+    
+  </style>
+</head>
+<body>
+  <div class="form-wrapper">
+
+    <div class="logo-container">
+      <img src="/images/NRG-LOGO.png" alt="Next Renewable Generation Logo" class="logo">
+    </div>
+
+    <h1>Electricity & Fuel Consumption</h1>
+    <form id="energyForm">
+      <label for="electricity">1. Annual electricity consumption (kWh):</label>
+      <input type="number" id="electricity" placeholder="Enter kWh" min="0" required />
+
+      <label>2. Do you use any fuels (for generation, HVAC, or machines)?</label>
+      <select id="fuelYesNo" disabled required>
+        <option value="">Loading fuels...</option>
+      </select>
+
+      <div id="fuelContainer" class="hidden">
+        <div id="fuelList"></div>
+        <button type="button" id="addFuelBtn">+ Add Another Fuel</button>
+      </div>
+
+      <button type="submit">Continue</button>
+    </form>
+  </div>
+
+  <script>
+    const fuelYesNo = document.getElementById('fuelYesNo');
+    const fuelContainer = document.getElementById('fuelContainer');
+    const fuelList = document.getElementById('fuelList');
+    const addFuelBtn = document.getElementById('addFuelBtn');
+    let fuelFactors = {};
+
+    async function loadFuelFactors() {
+      try {
+        const res = await fetch('/api/fuels');
+        const data = await res.json();
+        data.forEach(f => {
+          const key = f.Fuel.toLowerCase();
+          fuelFactors[key] = {
+            tCO2: { ton: f["ton [tCO2]"], kg: f["kg [tCO2]"], L: f["L [tCO2]"], kWh: f["kWh [tCO2]"] },
+            tCH4: { ton: f["ton [tCH4]"], kg: f["kg [tCH4]"], L: f["L [tCH4]"], kWh: f["kWh [tCH4]"] },
+            tN2O: { ton: f["ton [tN2O]"], kg: f["kg [tN2O]"], L: f["L [tN2O]"], kWh: f["kWh [tN2O]"] }
+          };
+        });
+        fuelYesNo.innerHTML = `<option value="">Select</option><option value="no">No</option><option value="yes">Yes</option>`;
+        fuelYesNo.disabled = false;
+      } catch {
+        alert('Error loading fuel data.');
+      }
+    }
+    loadFuelFactors();
+
+    const createFuelEntry = () => {
+      const div = document.createElement('div');
+      div.className = 'fuel-entry';
+      div.innerHTML = `
+        <select class="fuelType" required>
+          <option value="">Select Fuel</option>
+          ${Object.keys(fuelFactors)
+            .map(f => `<option value="${f}">${f.charAt(0).toUpperCase() + f.slice(1)}</option>`)
+            .join('')}
+        </select>
+        <input type="number" class="fuelAmount" placeholder="Amount" min="0" required />
+        <select class="fuelUnit" required>
+          <option value="">Unit</option>
+          <option value="ton">Tonnes</option><option value="kg">kg</option>
+          <option value="L">Litres</option><option value="kWh">kWh</option>
+        </select>
+        <button type="button" class="remove-fuel-btn">X</button>
+      `;
+      div.querySelector('.remove-fuel-btn').onclick = () => div.remove();
+      return div;
+    };
+
+    fuelYesNo.onchange = () => {
+      if (fuelYesNo.value === 'yes') {
+        fuelContainer.classList.remove('hidden');
+        if (!fuelList.children.length) fuelList.appendChild(createFuelEntry());
+      } else {
+        fuelContainer.classList.add('hidden');
+        fuelList.innerHTML = '';
+      }
+    };
+    addFuelBtn.onclick = () => {
+      if (fuelList.children.length < 4) fuelList.appendChild(createFuelEntry());
+    };
+
+    document.getElementById('energyForm').onsubmit = e => {
+      e.preventDefault();
+
+      const electricity = parseFloat(document.getElementById('electricity').value);
+      const elecCO2 = electricity * 0.997 / 1000;
+
+      sessionStorage.setItem('Electricity', electricity);
+      sessionStorage.setItem('Electricity_tCO2', elecCO2);
+
+      const fuelData = [];
+      if (fuelYesNo.value === 'yes') {
+        fuelList.querySelectorAll('.fuel-entry').forEach(div => {
+          const type = div.querySelector('.fuelType').value;
+          const amount = parseFloat(div.querySelector('.fuelAmount').value);
+          const unit = div.querySelector('.fuelUnit').value;
+          if (!type || isNaN(amount)) return;
+          const f = fuelFactors[type];
+          fuelData.push({
+            type, amount, unit,
+            tCO2: amount * f.tCO2[unit],
+            tCH4: amount * f.tCH4[unit],
+            tN2O: amount * f.tN2O[unit]
+          });
+        });
+      }
+
+      // ===== Store structured per-fuel values (existing logic) =====
+      for (let i = 0; i < 4; i++) {
+        const f = fuelData[i] || {};
+        sessionStorage.setItem(`Fuel${i+1}`, f.type || "None");
+        sessionStorage.setItem(`Fuel${i+1}_Con`, f.amount || 0);
+        sessionStorage.setItem(`Fuel${i+1}_Meas`, f.unit || "");
+        sessionStorage.setItem(`Fuel${i+1}_CO2`, f.tCO2 || 0);
+        sessionStorage.setItem(`Fuel${i+1}_CH4`, f.tCH4 || 0);
+        sessionStorage.setItem(`Fuel${i+1}_N2O`, f.tN2O || 0);
+      }
+
+      // ======= New Logic for page5.html compatibility =======
+      let totalTCO2 = fuelData.reduce((sum, f) => sum + (f.tCO2 || 0), 0);
+      let totalTCH4 = fuelData.reduce((sum, f) => sum + (f.tCH4 || 0), 0);
+      let totalTN2O = fuelData.reduce((sum, f) => sum + (f.tN2O || 0), 0);
+      let totalCO2e = 0;
+
+      const fuelBreakdown = fuelData.map(f => ({
+        name: f.type,
+        tCO2: f.tCO2 || 0,
+        tCH4: f.tCH4 || 0,
+        tN2O: f.tN2O || 0,
+        co2e: (f.tCO2 || 0) + (f.tCH4 * 27.2 || 0) + (f.tN2O * 273 || 0)
+      }));
+
+      totalCO2e = fuelBreakdown.reduce((sum, f) => sum + f.co2e, 0);
+
+      const electricityCO2 = elecCO2;
+      const carbonScore = electricityCO2 + totalCO2e;
+
+      sessionStorage.setItem('fuelTCO2', totalTCO2);
+      sessionStorage.setItem('fuelTCH4', totalTCH4);
+      sessionStorage.setItem('fuelTN2O', totalTN2O);
+      sessionStorage.setItem('fuelCO2e', totalCO2e);
+      sessionStorage.setItem('electricityCO2', electricityCO2);
+      sessionStorage.setItem('carbonScore', carbonScore);
+      sessionStorage.setItem('fuelBreakdown', JSON.stringify(fuelBreakdown));
+
+      // Append to combined data string
+      let combinedData = sessionStorage.getItem('combinedData') || '';
+      combinedData += `|${electricity}|${elecCO2}`;
+      for (let i = 0; i < 4; i++) {
+        combinedData += `|${sessionStorage.getItem(`Fuel${i+1}`)}|${sessionStorage.getItem(`Fuel${i+1}_Con`)}|${sessionStorage.getItem(`Fuel${i+1}_Meas`)}|${sessionStorage.getItem(`Fuel${i+1}_CO2`)}|${sessionStorage.getItem(`Fuel${i+1}_CH4`)}|${sessionStorage.getItem(`Fuel${i+1}_N2O`)}`;
+      }
+      sessionStorage.setItem('combinedData', combinedData);
+
+      window.location.href = '/page4.html';
+    };
+  </script>
+</body>
+</html>

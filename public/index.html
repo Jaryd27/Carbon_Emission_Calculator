@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>NrG Welcomes You - Greenhouse Gas (GHG) Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora&display=swap" rel="stylesheet" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      font-family: sans-serif;
+      background-color: #f7f7f7;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .top, .middle, .bottom {
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .top img {
+      max-width: 240px;
+      width: 80%;
+      height: auto;
+      margin-bottom: 12px;
+    }
+    .bottom {
+      background-color: #fff;
+      padding: 18px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      text-align: left;
+      box-sizing: border-box;
+      max-height: 78vh;
+      overflow-y: auto;
+    }
+    .inviting-font {
+      font-family: 'Lora', serif;
+      color: #77dd77;
+      font-size: 2.2rem;
+      line-height: 1;
+    }
+    p.lead { margin: 0; color: #333; }
+    form label {
+      display: block;
+      margin-top: 12px;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    input[type="text"], input[type="email"] {
+      width: 100%;
+      padding: 10px 12px;
+      margin-top: 6px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      box-sizing: border-box;
+      font-size: 1rem;
+    }
+    .terms-row {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 12px;
+      font-size: 0.95rem;
+      white-space: nowrap;
+    }
+    .terms-row input[type="checkbox"] { width: 16px; height: 16px; margin: 0; }
+    .terms-row label { display: inline; cursor: pointer; }
+    .terms-row a { color: #007bff; text-decoration: none; }
+    .terms-row a:hover { text-decoration: underline; }
+    #errorMessage {
+      color: #b00020;
+      font-size: 0.9rem;
+      margin-top: 8px;
+      display: none;
+    }
+    button[type="submit"] {
+      display: block;
+      width: 100%;
+      margin-top: 14px;
+      padding: 11px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button[type="submit"]:hover { background-color: #0056b3; }
+    @media (max-width: 360px) {
+      .terms-row { white-space: normal; gap: 0.4rem; }
+      .top img { max-width: 180px; }
+    }
+
+    .logo-container {
+      display: flex;
+      justify-content: center;   /* centers horizontally */
+      align-items: center;
+      margin-bottom: 20px;       /* spacing before title */
+    }
+
+  .logo {
+      width: 180px;              /* set desired size */
+      height: auto;
+    } 
+    
+  </style>
+</head>
+<body>
+
+  <div class="top">
+    <div class="logo-container">
+      <img src="/images/NRG-LOGO.png" alt="Next Renewable Generation Logo" class="logo">
+    </div>
+
+    </a>
+    <h1 style="margin:0;">
+      <span class="inviting-font">NrG Welcomes You</span><br />
+      <small style="font-size:2rem; color:#333;">Greenhouse Gas (GHG) Calculator</small>
+    </h1>
+  </div>
+
+  <div class="middle">
+    <p class="lead">Please fill in your details to start the questionnaire (Note that your information will be kept private and will only be used for communication purposes).</p>
+  </div>
+
+  <div class="bottom">
+    <form id="loginForm" autocomplete="on" novalidate>
+      <label for="name">Name</label>
+      <input id="name" name="name" type="text" placeholder="Your name" required />
+
+      <label for="surname">Surname</label>
+      <input id="surname" name="surname" type="text" placeholder="Your surname" required />
+
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" placeholder="you@example.com" required />
+
+      <div class="terms-row">
+        <input id="termsCheckbox" name="accepted" type="checkbox" />
+        <label for="termsCheckbox">
+          I accept the <a href="/terms.html" target="_blank" rel="noopener noreferrer">Terms &amp; Conditions</a>
+        </label>
+      </div>
+
+      <div id="errorMessage" role="alert">Please accept the Terms & Conditions before continuing.</div>
+
+      <button type="submit">Start</button>
+    </form>
+  </div>
+
+  <script>
+    (function () {
+      const form = document.getElementById('loginForm');
+      const errorEl = document.getElementById('errorMessage');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorEl.style.display = 'none';
+
+        const accepted = document.getElementById('termsCheckbox').checked;
+        if (!accepted) {
+          errorEl.textContent = 'Please accept the Terms & Conditions before continuing.';
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        const name = document.getElementById('name').value.trim();
+        const surname = document.getElementById('surname').value.trim();
+        const email = document.getElementById('email').value.trim();
+
+        if (!name || !surname || !email) {
+          errorEl.textContent = 'Please complete all fields.';
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        const userId = 'U' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+        sessionStorage.setItem('userId', userId);
+        sessionStorage.setItem('name', name);
+        sessionStorage.setItem('surname', surname);
+        sessionStorage.setItem('email', email);
+
+        const combinedData = `${userId}|${name}|${surname}|${email}`;
+        sessionStorage.setItem('combinedData', combinedData);
+
+        try {
+          const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, name, surname, email, accepted })
+          });
+
+          const json = await res.json();
+
+          if (res.ok && json.userId) {
+            sessionStorage.setItem('userId', json.userId);
+            window.location.href = '/page2.html';
+          } else {
+            window.location.href = '/page2.html';
+          }
+        } catch (err) {
+          console.error('Network error:', err);
+          window.location.href = '/page2.html';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NRG Questionnaire - Results</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+      width: 95%;
+      max-width: 1200px;
+      margin: 40px 0;
+      position: relative;
+    }
+    h1,h2,h3 {
+      color: #77dd77;
+      font-family: 'Lora', serif;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    h2,h3 { margin-top: 60px; }
+    .chart-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    .left-panel { flex: 0.65; }
+    .right-panel {
+      flex: 0.35;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    canvas {
+      width: 100% !important;
+      height: 500px !important;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 90%;
+      font-size: 15px;
+    }
+    table,th,td { border: 1px solid #ccc; }
+    th {
+      background: #f0f0f0;
+      text-align: center;
+    }
+    td:first-child { text-align: left; }
+    td:not(:first-child) { text-align: center; }
+    th,td { padding: 8px 10px; }
+    .text-block {
+      width: 90%;
+      margin: 0 auto 15px auto;
+      text-align: justify;
+      font-size: 15px;
+      color: #333;
+      line-height: 1.5;
+    }
+    .button-group {
+      margin-top: 40px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    .button-group button {
+      padding: 10px 25px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      background: #007BFF;
+      color: white;
+      border-radius: 6px;
+      transition: background-color .3s;
+    }
+    .button-group button:hover { background: #0056b3; }
+    @media(max-width:900px){
+      .chart-row { flex-direction: column; align-items: center; }
+      .left-panel,.right-panel { flex:1;width:100%;margin:auto; }
+      canvas { height:400px!important; }
+    }
+    .logo-container {
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      margin-bottom:20px;
+    }
+    .logo { width:180px; height:auto; }
+  </style>
+</head>
+<body>
+  <div class="container" id="report">
+    <div class="logo-container">
+      <img src="/images/NRG-LOGO.png" alt="Next Renewable Generation Logo" class="logo">
+    </div>
+
+    <h1>Overview of CO₂e Emissions</h1>
+
+    <!-- ======================= -->
+    <!-- SECTION 1: TOTAL + OFFSETS -->
+    <!-- ======================= -->
+    <div class="chart-row">
+      <div class="left-panel">
+        <canvas id="emissionsChart"></canvas>
+      </div>
+
+      <div class="right-panel">
+
+        <div class="text-block">
+          <p><strong>This report provides an analysis of your company’s CO₂-equivalent* emissions over the last calendar year.</strong></p>
+          <p>Your company’s overall CO₂e emissions and offsets over the last year are detailed below:</p>
+        </div>
+
+        <table id="summaryTable">
+          <tr><th>Category</th><th>CO₂e (tonnes)</th></tr>
+          <tr><td><strong>Total Emissions</strong></td><td id="totalEmissionsCell"></td></tr>
+          <tbody id="emissionSources"></tbody>
+          <tr><td><strong>Total Offsets</strong></td><td id="totalOffsetsCell"></td></tr>
+          <tbody id="offsetSources"></tbody>
+          <tr><th>Net CO₂e Emissions</th><th id="net"></th></tr>
+        </table>
+
+        <div class="text-block" style="font-size:14px;color:#555;margin-top:10px;">
+          <p><em>* Global Warming Potential (GWP)</em> compares the radiative forcing of a tonne of a greenhouse gas to a tonne of CO₂, standardising all GHGs to a carbon dioxide equivalent (CO₂-eq).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================= -->
+    <!-- SECTION 2: GHG TABLE -->
+    <!-- ======================= -->
+    <h2>Annual GHG Emissions Report</h2>
+    <div class="chart-row">
+      <div class="left-panel">
+        <div class="text-block">
+          <p><strong>This report provides an overview of your company’s GHG emissions report.</strong> The GHG report captures CO₂, CH₄, and N₂O.</p>
+          <p>Your company’s overall GHG report output is captured in the adjacent table:</p>
+          <p>This GHG report only includes Scope 1 emissions to align with South African GHG reporting standards.</p>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <table id="ghgTable" style="max-width:700px;">
+          <tr><th>Fuel</th><th>CO₂ (t)</th><th>CH₄ (t)</th><th>N₂O (t)</th></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ======================= -->
+    <!-- SECTION 3: CARBON TAX -->
+    <!-- ======================= -->
+    <h2>Taxable CO₂e Emissions (SA Carbon Tax)</h2>
+    <div class="chart-row">
+      <div class="left-panel"><canvas id="taxableChart"></canvas></div>
+
+      <div class="right-panel">
+        <div class="text-block">
+          <p><strong>This report provides an analysis of your company’s taxable CO₂e emissions for the purpose of the South African Carbon Tax Act.</strong></p>
+          <p>The chart shows taxable emissions per fuel type (electricity excluded) and total emissions subject to the Carbon Tax.</p>
+        </div>
+
+        <h3 style="margin-top:25px;color:#444;">Carbon Tax Allowances</h3>
+        <table id="allowancesTable">
+          <tr><th>Allowance Type</th><th>Percentage (%)</th></tr>
+        </table>
+
+        <h3 style="margin-top:25px;color:#444;">Carbon Tax Summary</h3>
+        <table id="taxSummaryTable">
+          <tr><th>Metric</th><th>Value</th></tr>
+          <tr><td>Total Taxable Emissions (tCO₂e)</td><td id="taxEmissions"></td></tr>
+          <tr><td>Total Carbon Tax (R)</td><td id="totalTax"></td></tr>
+          <tr><td>Total Allowances (%)</td><td id="allowPercent"></td></tr>
+          <tr><th>New Taxable Value (R)</th><th id="newTaxable"></th></tr>
+        </table>
+      </div>
+    </div>
+
+     <!-- ✅ NEW FORECAST TABLE -->
+        <h3 style="margin-top:40px;color:#444;">5 Year Carbon Tax Forecast</h3>
+        <table id="forecastTable">
+          <tr><th>Year</th><th>Tax Rate (R/tCO₂e)</th><th>Total Carbon Tax (R)</th></tr>
+        </table>
+
+      
+
+  <!-- ======================= -->
+<!-- SECTION 4: TAX FORECAST -->
+<!-- ======================= -->
+<h3 style="margin-top:40px;color:#444; text-align:center;">
+  5 Year Carbon Tax Forecast Trend
+</h3>
+
+<div style="width:90%; margin:0 auto 40px auto;">
+  <canvas id="taxForecastChart"></canvas>
+</div>
+
+<div class="button-group">
+   
+  <button id="contactBtn">Contact NRG</button>
+  <button id="exitBtn">Exit</button>
+</div>
+  
+
+  <script>
+    /* =============================
+       LOAD DATA FROM SESSIONSTORAGE
+    ============================== */
+
+    const totalEmissions = parseFloat(sessionStorage.getItem('Tot_tCO2_Eq')) || 0;
+    const electricityCO2 = parseFloat(sessionStorage.getItem('electricityCO2')) || 0;
+    const creditOffsets = parseFloat(sessionStorage.getItem('CO2_credit')) || 0;
+
+    const renewableBreakdown = JSON.parse(sessionStorage.getItem('renewableBreakdown') || '[]');
+    const fuelBreakdown = JSON.parse(sessionStorage.getItem('fuelBreakdown') || '[]');
+    const allowancesData = JSON.parse(sessionStorage.getItem('allowances') || '[]');
+
+    const renewableOffsets = renewableBreakdown.reduce((t,r)=>t+r.value,0);
+    const netEmissions = (totalEmissions - (creditOffsets + renewableOffsets)).toFixed(2);
+
+    document.getElementById('totalEmissionsCell').textContent = totalEmissions.toFixed(2);
+    document.getElementById('totalOffsetsCell').textContent = (creditOffsets + renewableOffsets).toFixed(2);
+    document.getElementById('net').textContent = netEmissions;
+
+    /* =============================
+       POPULATE EMISSIONS TABLE
+    ============================== */
+
+    const emissionSources = document.getElementById('emissionSources');
+    const offsetRows = document.getElementById('offsetSources');
+
+    const emissions = [
+      { name: 'Electricity', value: electricityCO2 },
+      ...fuelBreakdown.map(f => ({ name: f.name, value: f.co2e }))
+    ].filter(e => e.value > 0);
+
+    emissions.forEach(e => {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td>↳ ${e.name}</td><td>${e.value.toFixed(2)}</td>`;
+      emissionSources.appendChild(row);
+    });
+
+    /* =============================
+       POPULATE OFFSET TABLE
+    ============================== */
+
+    const offsets = [
+      { name: 'Carbon Credits', value: creditOffsets },
+      ...renewableBreakdown.map(r => ({
+        name: r.name,
+        value: r.value
+      }))
+    ].filter(o => o.value > 0);
+
+    offsets.forEach(o => {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td>↳ ${o.name}</td><td>${o.value.toFixed(2)}</td>`;
+      offsetRows.appendChild(row);
+    });
+
+    /* =============================
+       EMISSIONS + OFFSETS BAR CHART
+    ============================== */
+
+    const labels1 = [
+      ...emissions.map(e => e.name),
+      ...offsets.map(o => o.name),
+      'Net Emissions'
+    ];
+    const data1 = [
+      ...emissions.map(e => e.value),
+      ...offsets.map(o => -o.value),
+      parseFloat(netEmissions)
+    ];
+
+    const colors1 = [
+      ...emissions.map(() => '#77dd77'),
+      ...offsets.map(o =>
+        o.name.toLowerCase().includes('credit') ? '#ffd966' :
+        o.name.toLowerCase().includes('solar') ? '#ffcc33' :
+        o.name.toLowerCase().includes('wind') ? '#84b6f4'  :
+        o.name.toLowerCase().includes('hydro') ? '#77c9d4' :
+        /* fallback for OTHER */
+        '#a2c2e1'
+      ),
+      '#ff6961'
+    ];
+
+    new Chart(document.getElementById('emissionsChart'), {
+      type: 'bar',
+      data: {
+        labels: labels1,
+        datasets: [{
+          label: 'CO₂e (t)',
+          data: data1,
+          backgroundColor: colors1,
+          borderColor: '#444',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        maintainAspectRatio: false,
+        responsive: true,
+        scales: { x: { beginAtZero: true } },
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    /* =============================
+       GHG TABLE
+    ============================== */
+
+    const ghgTable = document.getElementById('ghgTable');
+
+    fuelBreakdown.forEach(f => {
+      const row = document.createElement('tr');
+      row.innerHTML =
+        `<td>${f.name}</td>
+         <td>${(f.tCO2 || 0).toFixed(3)}</td>
+         <td>${(f.tCH4 || 0).toFixed(6)}</td>
+         <td>${(f.tN2O || 0).toFixed(6)}</td>`;
+      ghgTable.appendChild(row);
+    });
+
+    /* =============================
+       CARBON TAX CHART
+    ============================== */
+
+    const taxableFuels = fuelBreakdown.filter(f =>
+      f.name.toLowerCase() !== 'electricity' && f.co2e > 0
+    );
+
+    new Chart(document.getElementById('taxableChart'), {
+      type: 'bar',
+      data: {
+        labels: taxableFuels.map(f => f.name),
+        datasets: [{
+          label: 'Taxable CO₂e (t)',
+          data: taxableFuels.map(f => f.co2e),
+          backgroundColor: '#77aaff',
+          borderColor: '#004080',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        maintainAspectRatio:false,
+        responsive:true,
+        scales:{ x:{ beginAtZero:true } },
+        plugins:{ legend:{ display:false } }
+      }
+    });
+
+    /* =============================
+       ALLOWANCES TABLE
+    ============================== */
+
+    const allowTable = document.getElementById('allowancesTable');
+    let totalAllowance = 0;
+
+    allowancesData.forEach(a => {
+  const cleanName = a.name.replace(/\s*i$/, ''); // removes trailing " i"
+
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td>${cleanName}</td>
+    <td>${a.percent.toFixed(1)}%</td>
+  `;
+  allowTable.appendChild(row);
+  totalAllowance += a.percent;
+});
+
+
+    const totalRow = document.createElement('tr');
+    totalRow.innerHTML = `<th>Total Allowances</th><th>${totalAllowance.toFixed(1)}%</th>`;
+    allowTable.appendChild(totalRow);
+
+    /* =============================
+       CARBON TAX SUMMARY
+    ============================== */
+
+    const taxEmissions = taxableFuels.reduce((t,f)=>t+f.co2e,0);
+    const CARBON_TAX_RATE = 308;
+    const totalCarbonTax = taxEmissions * CARBON_TAX_RATE;
+    const newTaxableValue = totalCarbonTax * (1 - totalAllowance/100);
+
+    
+
+    document.getElementById('taxEmissions').textContent = taxEmissions.toFixed(2);
+    document.getElementById('totalTax').textContent = 'R ' + totalCarbonTax.toFixed(2);
+    document.getElementById('allowPercent').textContent = totalAllowance.toFixed(1)+'%';
+    document.getElementById('newTaxable').textContent = 'R ' + newTaxableValue.toFixed(2);
+
+    const taxYears = ['2026', '2027', '2028', '2029', '2030'];
+
+     const taxRates = {
+    2026: 308,
+    2027: 347,
+    2028: 385,
+    2029: 424,
+    2030: 462
+  };
+
+  const forecastTable = document.getElementById('forecastTable');
+
+  Object.entries(taxRates).forEach(([year, rate]) => {
+  const tax = taxEmissions * rate * (1 - totalAllowance/100);
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td>${year}</td>
+    <td>R ${rate.toFixed(2)}</td>
+    <td>R ${tax.toFixed(2)}</td>
+  `;
+  forecastTable.appendChild(row);
+});
+
+
+  const forecastTaxValues = taxYears.map(year => {
+  const grossTax = taxEmissions * taxRates[year];
+  const netTax = grossTax * (1 - totalAllowance / 100);
+  return Number(netTax.toFixed(2));
+});
+
+new Chart(document.getElementById('taxForecastChart'), {
+  type: 'line',
+  data: {
+    labels: taxYears,
+    datasets: [{
+      label: 'Projected Carbon Tax (R)',
+      data: forecastTaxValues,
+      borderColor: '#77dd77',
+      backgroundColor: 'rgba(119, 221, 119, 0.2)',
+      tension: 0.3,
+      fill: true,
+      pointRadius: 5,
+      pointBackgroundColor: '#77dd77'
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: value => 'R ' + value.toLocaleString('en-ZA')
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        callbacks: {
+          label: ctx => 'R ' + ctx.raw.toLocaleString('en-ZA')
+        }
+      }
+    }
+  }
+});
+
+
+document.getElementById('contactBtn').onclick = () => window.open('https://nrgeneration.co.za/contact-us/','_blank');
+document.getElementById('exitBtn').onclick = () => window.location.href = '/index.html';
+
+/* =========================================================
+   PDF EXPORT — ISOLATED, CLONE-BASED, BROWSER-SAFE
+========================================================= */
+
+/* document.getElementById('downloadPdfBtn').onclick = async () => {
+
+  const original = document.getElementById('report');
+
+  // small delay to ensure charts are fully rendered before cloning/capture
+  await new Promise(r => setTimeout(r, 300));
+
+  const pdfClone = original.cloneNode(true);
+
+  // remove scripts from the clone (only content should be rendered to PDF)
+  pdfClone.querySelectorAll('script').forEach(s => s.remove());
+
+  // hide buttons in PDF
+  const buttons = pdfClone.querySelector('.button-group');
+  if (buttons) buttons.remove();
+
+  // force vertical layout
+  pdfClone.querySelectorAll('.chart-row').forEach(row => {
+    row.style.display = 'block';
+    row.style.textAlign = 'center';
+
+    const table = row.querySelector('table');
+    const canvas = row.querySelector('canvas');
+
+    if (table && canvas) {
+      table.after(canvas);
+      canvas.style.margin = '20px auto 0 auto';
+    }
+  });
+
+  // page breaks after sections
+  pdfClone.querySelectorAll('h2, h3').forEach(h => {
+    h.style.pageBreakBefore = 'always';
+  });
+
+  // PDF container styling
+  Object.assign(pdfClone.style, {
+    width: '180mm',
+    padding: '10mm',
+    margin: '0',
+    boxShadow: 'none'
+  });
+
+  // header (logo + date)
+  const header = document.createElement('div');
+  header.style.display = 'flex';
+  header.style.justifyContent = 'space-between';
+  header.style.alignItems = 'center';
+  header.style.marginBottom = '10mm';
+  header.innerHTML = `
+    <img src="/images/NRG-LOGO.png" style="width:120px">
+    <div style="font-size:12px">${new Date().toLocaleDateString('en-ZA')}</div>
+  `;
+  pdfClone.prepend(header);
+
+  // mount clone invisibly IN the viewport (prevents blank captures)
+  Object.assign(pdfClone.style, {
+    position: 'fixed',
+    top: '0',
+    left: '-10000px',
+    opacity: '10',
+    pointerEvents: 'none',
+    zIndex: '-1',
+    background: '#ffffff'
+  });
+  document.body.appendChild(pdfClone);
+
+  // ===== FIX: copy rendered Chart.js canvases into the clone (canvas -> img) =====
+  const originalCanvases = original.querySelectorAll('canvas');
+  const cloneCanvases = pdfClone.querySelectorAll('canvas');
+
+  // ===== FIX: copy rendered Chart.js canvases into the clone (canvas -> img) =====
+  const canvasIds = ['emissionsChart', 'taxableChart', 'taxForecastChart'];
+
+  canvasIds.forEach(id => {
+    const origCanvas = original.querySelector(`#${id}`);
+    const cloneCanvas = pdfClone.querySelector(`#${id}`);
+    if (!origCanvas || !cloneCanvas) return;
+
+    if (origCanvas.width > 0 && origCanvas.height > 0) {
+      const img = document.createElement('img');
+      img.src = origCanvas.toDataURL('image/png', 1.0);
+      img.style.width = '100%';
+      img.style.height = 'auto';
+      img.style.display = 'block';
+      img.style.margin = '0 auto';
+
+      cloneCanvas.parentNode.replaceChild(img, cloneCanvas);
+    }
+  });
+
+  // ✅ INSERT THE IMAGE-LOADING WAIT RIGHT HERE (after the forEach loop finishes)
+  const imgs = Array.from(pdfClone.querySelectorAll('img'));
+  await Promise.all(
+    imgs.map(img => img.complete ? Promise.resolve() : new Promise(resolve => {
+      img.onload = resolve;
+      img.onerror = resolve;
+    }))
+  );
+
+  
+  // give the browser a moment to paint the injected <img> elements
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+  html2pdf()
+    .from(pdfClone)
+    .set({
+      filename: 'NRG_CO2e_Report.pdf',
+      margin: [15, 10, 20, 10],
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        scrollX: 0,
+        scrollY: 0
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    })
+    .toPdf()
+    .get('pdf')
+    .then(pdf => {
+
+      const pages = pdf.internal.getNumberOfPages();
+
+      for (let i = 1; i <= pages; i++) {
+        pdf.setPage(i);
+
+        pdf.setFontSize(9);
+        pdf.text(
+          'This document is the intellectual property of Next Renewable Generation (Pty) Ltd.',
+          105,
+          290,
+          { align: 'center' }
+        );
+
+        pdf.text(`Page ${i} of ${pages}`, 200, 290, { align: 'right' });
+      }
+    })
+    .save()
+    .finally(() => {
+      document.body.removeChild(pdfClone);
+    });
+};
+
+document.getElementById('contactBtn').onclick = () =>
+  window.open('https://nrgeneration.co.za/contact-us/', '_blank'); */
+
+document.getElementById('exitBtn').onclick = () =>
+  location.href = '/index.html';
+</script>
+
+</body>
+</html>
